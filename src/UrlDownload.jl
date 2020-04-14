@@ -12,7 +12,7 @@ const CSVS = [:CSV, :TSV]
 
 # This is one is mimic FileIO.query, may be it should be
 # moved to FileIO.
-function wrapdata(url, data)
+function wrapdata(url, data, ::Nothing)
     buf = IOBuffer(data)
     _, ext = splitext(url)
     if haskey(ext2sym, ext)
@@ -67,7 +67,7 @@ function urldownload(url; format = nothing, progress = false, headers = HTTP.Hea
         end
     end
 
-    return wrapdata(url, body)
+    return wrapdata(url, body, format)
 end
 
 end # module
