@@ -8,6 +8,8 @@ using CSV
 
 export urldownload
 
+const CSVS = [:CSV, :TSV]
+
 # This is one is mimic FileIO.query, may be it should be
 # moved to FileIO.
 function wrapdata(url, data)
@@ -17,7 +19,7 @@ function wrapdata(url, data)
         sym = ext2sym[ext]
         no_magic = !hasmagic(sym)
         # Sorry, I prefer CSV...
-        if sym == :CSV
+        if sym ∈ CSVS
             return CSV.File(buf)
         end
         if lensym(sym) == 1 && no_magic # we only found one candidate and there is no magic bytes, trust the extension
@@ -35,7 +37,7 @@ end
 
 function wrapdata(url, data, format::Symbol)
     buf = IOBuffer(data)
-    if format == :CSV
+    if format ∈ CSVS
         return CSV.File(buf)
     else
         return load(Stream{DataFormat{format}, typeof(buf)}(buf, nothing))
