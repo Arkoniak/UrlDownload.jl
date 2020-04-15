@@ -14,9 +14,10 @@ julia = "1.4"
 
 [extras]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
-ImageMagick = "6218d12a-5da1-5696-b52f-db25d2ecc6d1"
-Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Feather = "becb17da-46f6-5d3c-ad1b-1c5fe96bc73c"
+ImageMagick = "6218d12a-5da1-5696-b52f-db25d2ecc6d1"
+JSON3 = "0f8b85d8-7281-11e9-16c2-39a750bddbf1"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test", "ImageMagick", "Feather", "CSV"]
+test = ["Test", "ImageMagick", "Feather", "CSV", "JSON3"]
