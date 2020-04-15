@@ -4,22 +4,19 @@ authors = ["Andrey Oskin"]
 version = "0.1.0"
 
 [deps]
-CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
-FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
 HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
 ProgressMeter = "92933f4c-e287-5a05-a399-4b506db050ca"
 
 [compat]
-CSV = "0.6"
-FileIO = "1"
 HTTP = "0.8"
 ProgressMeter = "1"
 julia = "1.4"
 
 [extras]
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 ImageMagick = "6218d12a-5da1-5696-b52f-db25d2ecc6d1"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
-FeatherFiles = "b675d258-116a-5741-b937-b79f054b0542"
+Feather = "becb17da-46f6-5d3c-ad1b-1c5fe96bc73c"
 
 [targets]
-test = ["Test", "ImageMagick", "FeatherFiles"]
+test = ["Test", "ImageMagick", "Feather", "CSV"]
