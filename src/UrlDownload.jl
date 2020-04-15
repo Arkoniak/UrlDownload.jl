@@ -1,8 +1,5 @@
 module UrlDownload
 
-# import FileIO
-# import FileIO: hasmagic, ext2sym,  lensym, query, Stream, DataFormat
-# import FileIO: load
 using ProgressMeter
 using HTTP
 
@@ -12,14 +9,20 @@ const ext2sym = Dict(
     r".feather" => :FEATHER,
     r".[ct]sv" => :CSV,
     r".jpe?g" => :PIC,
-    r".png" => :PIC
+    r".png" => :PIC,
+    r".json" => :JSON,
+    r".tga" => :PIC,
+    r".gif" => :PIC,
+    r".bmp" => :PIC,
+    r".pcx" => :PIC
 )
 
 const sym2func = Dict(
     :FEATHER => (x, y) -> load_feather(x, y),
     :PIC => (x, y) -> load_pic(x, y),
     :CSV => (x, y) -> load_csv(x, y),
-    :TSV => (x, y) -> load_csv(x, y)
+    :TSV => (x, y) -> load_csv(x, y),
+    :JSON => (x, y) -> load_json(x, y)
 )
 
 function load_feather(buf, data)
@@ -35,6 +38,11 @@ end
 function load_pic(buf, data)
     lib = checked_import(:ImageMagick)
     return Base.invokelatest(lib.load_, data)
+end
+
+function load_json(buf, data)
+    lib = checked_import(:JSON3)
+    return Base.invokelatest(lib.read, data)
 end
 
 # Borrowed directly from FileIO
