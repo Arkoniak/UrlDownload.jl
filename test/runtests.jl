@@ -15,7 +15,7 @@ using UrlDownload
     res = urldownload(url, format = :TSV)
 end
 
-@testset "Nonstandard CSVs" begin
+@testset "Force format CSVs" begin
     url = "https://raw.githubusercontent.com/Arkoniak/UrlDownload.jl/master/data/semicolon.csv"
     res = urldownload(url)
 
@@ -36,7 +36,12 @@ end
     res = urldownload(url)
 end
 
-@testset "Progress" begin
+@testset "Json" begin
+    url = "https://raw.githubusercontent.com/Arkoniak/UrlDownload.jl/master/data/test.json"
+    res = urldownload(url)
+end
+
+@testset "Progress meter" begin
     url = "https://raw.githubusercontent.com/Arkoniak/UrlDownload.jl/master/data/ext.csv"
     res = urldownload(url, true)
 end
