@@ -18,29 +18,29 @@ const ext2sym = Dict(
 )
 
 const sym2func = Dict(
-    :FEATHER => (x, y) -> load_feather(x, y),
-    :PIC => (x, y) -> load_pic(x, y),
-    :CSV => (x, y) -> load_csv(x, y),
-    :TSV => (x, y) -> load_csv(x, y),
-    :JSON => (x, y) -> load_json(x, y)
+    :FEATHER => (x, y; kw...) -> load_feather(x, y; kw...),
+    :PIC => (x, y; kw...) -> load_pic(x, y; kw...),
+    :CSV => (x, y; kw...) -> load_csv(x, y; kw...),
+    :TSV => (x, y; kw...) -> load_csv(x, y; kw...),
+    :JSON => (x, y; kw...) -> load_json(x, y; kw...)
 )
 
-function load_feather(buf, data)
+function load_feather(buf, data; kw...)
     lib = checked_import(:Feather)
     return Base.invokelatest(lib.read, buf)
 end
 
-function load_csv(buf, data)
+function load_csv(buf, data; kw...)
     lib = checked_import(:CSV)
-    return Base.invokelatest(lib.File, buf)
+    return Base.invokelatest(lib.File, buf; kw...)
 end
 
-function load_pic(buf, data)
+function load_pic(buf, data; kw...)
     lib = checked_import(:ImageMagick)
     return Base.invokelatest(lib.load_, data)
 end
 
-function load_json(buf, data)
+function load_json(buf, data; kw...)
     lib = checked_import(:JSON3)
     return Base.invokelatest(lib.read, data)
 end
@@ -85,47 +85,36 @@ function datatype(url)
     error("$ext is unsupported.")
 end
 
-function wrapdata(url, data, format)
+function wrapdata(url, data, format; kw...)
     buf = IOBuffer(data)
     dtype = format == nothing ? datatype(url) : format
 
-    sym2func[dtype](buf, data)
+    sym2func[dtype](buf, data; kw...)
 end
 
-# This is one is mimic FileIO.query, may be it should be
-# moved to FileIO.
-# function wrapdata(url, data, ::Nothing)
-#     buf = IOBuffer(data)
-#     _, ext = splitext(url)
-#     if haskey(ext2sym, ext)
-#         sym = ext2sym[ext]
-#         no_magic = !hasmagic(sym)
-#         # Sorry, I prefer CSV...
-#         if sym ∈ CSVS
-#             return CSV.File(buf)
-#         end
-#         if lensym(sym) == 1 && no_magic # we only found one candidate and there is no magic bytes, trust the extension
-#             return load(Stream{DataFormat{sym}, typeof(buf)}(buf, nothing))
-#         elseif lensym(sym) > 1 && no_magic
-#             return load(Stream{DataFormat{sym[1]}, typeof(buf)}(buf, nothing))
-#         end
-#         if no_magic && !hasfunction(sym)
-#             error("Some formats with extension ", ext, " have no magic bytes; use `urldownload(url, format = :FMT)` to resolve the ambiguity.")
-#         end
-#     end
-#     # Check the magic bytes
-#     load(query(buf, nothing))
-# end
-
 
 """
-    urldownload(url; format = nothing, progress = false, headers = HTTP.Header[], update_period = 1, kw...)
+    urldownload(url, progress = false; parser = nothing, format = nothing, headers = HTTP.Header[], httpkw = Pair[], update_period = 1, kw...)
 
-Download file from the corresponding url
+Download file from the corresponding url in memory and process it to the necessary data structure.
+
+*Arguments*
+* `url`: url of download
+* `progress`: show ProgressMeter, by default it is not shown
+* `parser`: custom parser, function that should accept one positional argument of the type `Vector{UInt8}` and optional
+keyword arguments and return necessary data structure. If parser is set than it overrides all other settings, such as `format`.
+If parser is not set, than internal parsers are used for data process.
+* `format`: one of the fixed formats (:CSV, :PIC, :FEATHER, :JSON), if set overrides autodetection mechanism.
+* `headers`: `HTTP.jl` arguments that set http header of the request.
+* `httpkw`: `HTTP.jl` additional keyword arguments that is passed to the `GET` function. Should be supplied as a vector of
+pairs.
+* `update_period`: period of `ProgressMeter` update, by default 1 sec
+* `kw...`: any keyword arguments that should be passed to the data parser.
 """
-function urldownload(url, progress = false; format = nothing, headers = HTTP.Header[], update_period = 1, kw...)
+function urldownload(url, progress = false; parser = nothing, format = nothing, headers = HTTP.Header[],
+        update_period = 1, httpkw = Pair[], kw...)
     body = UInt8[]
-    HTTP.open("GET", url, headers; kw...) do stream
+    HTTP.open("GET", url, headers; httpkw...) do stream
         resp = startread(stream)
         eof(stream) && return
         total_bytes = Int(floor(parse(Float64, HTTP.header(resp, "Content-Length", "NaN"))))
@@ -141,7 +130,11 @@ function urldownload(url, progress = false; format = nothing, headers = HTTP.Hea
         end
     end
 
-    return wrapdata(url, body, format)
+    if parser == nothing
+        return wrapdata(url, body, format; kw...)
+    else
+        return parser(body; kw...)
+    end
 end
 
 end # module
