@@ -1,47 +1,16 @@
+module TestUrlDownload
 using Test
-using UrlDownload
 
-@testset "Standard CSVs" begin
-    url = "https://raw.githubusercontent.com/Arkoniak/UrlDownload.jl/master/data/ext.csv"
-    res = urldownload(url)
+for file in sort([file for file in readdir(@__DIR__) if
+                                   match(r"^test.*_.*\.jl$", file) !== nothing])
+    m = match(r"^test[_0-9]*(.*).jl$", file)
 
-    url = "https://raw.githubusercontent.com/Arkoniak/UrlDownload.jl/master/data/ext.tsv"
-    res = urldownload(url)
+    @testset "$(m[1])" begin
+        # Here you can optionally exclude some test files
+        # VERSION < v"1.1" && file == "test_xxx.jl" && continue
 
-    url = "https://raw.githubusercontent.com/Arkoniak/UrlDownload.jl/master/data/noextcsv"
-    res = urldownload(url, format = :CSV)
-
-    url = "https://raw.githubusercontent.com/Arkoniak/UrlDownload.jl/master/data/noexttsv"
-    res = urldownload(url, format = :TSV)
+        include(file)
+    end
 end
 
-@testset "Force format CSVs" begin
-    url = "https://raw.githubusercontent.com/Arkoniak/UrlDownload.jl/master/data/semicolon.csv"
-    res = urldownload(url)
-
-    url = "https://raw.githubusercontent.com/Arkoniak/UrlDownload.jl/master/data/semicolonnoextcsv"
-    res = urldownload(url, format = :CSV)
-end
-
-@testset "Pics" begin
-    url = "https://raw.githubusercontent.com/Arkoniak/UrlDownload.jl/master/data/test.jpg"
-    res = urldownload(url)
-
-    url = "https://raw.githubusercontent.com/Arkoniak/UrlDownload.jl/master/data/test.png"
-    res = urldownload(url)
-end
-
-@testset "Feather" begin
-    url = "https://raw.githubusercontent.com/Arkoniak/UrlDownload.jl/master/data/test.feather"
-    res = urldownload(url)
-end
-
-@testset "Json" begin
-    url = "https://raw.githubusercontent.com/Arkoniak/UrlDownload.jl/master/data/test.json"
-    res = urldownload(url)
-end
-
-@testset "Progress meter" begin
-    url = "https://raw.githubusercontent.com/Arkoniak/UrlDownload.jl/master/data/ext.csv"
-    res = urldownload(url, true)
-end
+end  # module

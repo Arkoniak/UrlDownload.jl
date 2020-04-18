@@ -5,15 +5,32 @@
 [![Build Status](https://travis-ci.com/Arkoniak/UrlDownload.jl.svg?branch=master)](https://travis-ci.com/Arkoniak/UrlDownload.jl)
 [![Codecov](https://codecov.io/gh/Arkoniak/UrlDownload.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/Arkoniak/UrlDownload.jl)
 
-This is simple package aimed to simplify process of data downloading, without intermediate files storing. Additionally
-`UrlDownload.jl` provides progress bar for big files with long download time. Currently these types of data are supported
+This is small package aimed to simplify process of data downloading, without intermediate files storing. Additionally `UrlDownload.jl` provides progress bar for big files with long download time.
+
+Currently these types of data are supported
 
 * PIC: image files, such as jpeg, png, bmp etc
 * CSV: files with comma separated values
 * FEATHER
 * JSON
 
-# Usage
+Unsupported file formats can be processed with the help of custom parsers.
+
+# Installation
+
+To install `UrlDownload` either do
+
+```julia
+using Pkg
+Pkg.add("UrlDownload")
+```
+
+or switch to `Pkg` mode with `]` and issue
+```julia
+pkg> add UrlDownload
+```
+
+# Basic usage
 
 ## Download CSV files
 
@@ -25,6 +42,24 @@ using DataFrames
 
 url = "https://raw.githubusercontent.com/Arkoniak/UrlDownload.jl/master/data/ext.csv"
 df = urldownload(url) |> DataFrame
+# 2×2 DataFrame
+# │ Row │ x     │ y     │
+# │     │ Int64 │ Int64 │
+# ├─────┼───────┼───────┤
+# │ 1   │ 1     │ 2     │
+# │ 2   │ 3     │ 4     │
+```
+
+For csv and other file formats one can use keyword arguments from the corresponding
+library, for example, to process csv with nonstandard delimiters, one can use
+`delim` argument from `CSV.jl`
+
+```julia
+using UrlDownload
+using DataFrames
+
+url = "https://raw.githubusercontent.com/Arkoniak/UrlDownload.jl/master/data/semicolon.csv"
+df = urldownload(url, delim = ';') |> DataFrame
 # 2×2 DataFrame
 # │ Row │ x     │ y     │
 # │     │ Int64 │ Int64 │
@@ -78,7 +113,8 @@ df = urldownload(url)
 # │ 2   │ 3     │ 4     │
 ```
 
-# Progress Meter
+# Additional functionality
+## Progress Meter
 
 By default nothing is shown during data downloading, but it can be changed with passing `true` as
 a second argument to the function `urldownload`
@@ -92,7 +128,49 @@ urldownload(url, true)
 # Progress: 45%|████████████████████                      | Time: 0:00:01
 ```
 
-# Undetected file types
+## Custom parsers
+If file type is not supported by `UrlDownload.jl` it is possible to use custom parser
+to process the data. Such parser should accept one positional argument, of the type
+`Vector{UInt8}` and can have optional keyword arguments.
+
+It should be used in `parser` argument of the `urldownload`.
+
+```julia
+using UrlDownload
+using DataFrames
+using CSV
+
+url = "https://raw.githubusercontent.com/Arkoniak/UrlDownload.jl/master/data/ext.csv"
+res = urldownload(url, parser = x -> DataFrame(CSV.File(IOBuffer(x))))
+# 2×2 DataFrame
+# │ Row │ x     │ y     │
+# │     │ Int64 │ Int64 │
+# ├─────┼───────┼───────┤
+# │ 1   │ 1     │ 2     │
+# │ 2   │ 3     │ 4     │
+```
+
+If keywords arguments are used in custom parser they will accept values from
+keyword arguments of `urldownload` function
+
+```julia
+using UrlDownload
+using DataFrames
+using CSV
+
+wrapper(x; kw...) = DataFrame(CSV.File(IOBuffer(x); kw...))
+
+url = "https://raw.githubusercontent.com/Arkoniak/UrlDownload.jl/master/data/semicolon.csv"
+res = urldownload(url, parser = wrapper, delim = ';')
+# 2×2 DataFrame
+# │ Row │ x     │ y     │
+# │     │ Int64 │ Int64 │
+# ├─────┼───────┼───────┤
+# │ 1   │ 1     │ 2     │
+# │ 2   │ 3     │ 4     │
+```
+
+## Undetected file types
 Sometimes file type can't be detected from the url, in this case one can supply optional
 `format` argument, to force necessary behavior
 
