@@ -29,10 +29,10 @@ end
     urldownload(url)
 
     url = "https://raw.githubusercontent.com/Arkoniak/UrlDownload.jl/master/data/test2.zip"
-    urldownload(url)
+    @test_logs (:warn, "More than one file in zip archive, returning first.") urldownload(url)
 
     url = "https://raw.githubusercontent.com/Arkoniak/UrlDownload.jl/master/data/test2.zip"
-    urldownload(url, multifile = true)
+    @test_logs (:warn, "Data format nothing is not supported.") urldownload(url, multifiles = true)
 end
 
 @testset "compress overrides" begin
@@ -43,11 +43,10 @@ end
     urldownload(url, compress = :none, parser = identity)
 
     url = "https://raw.githubusercontent.com/Arkoniak/UrlDownload.jl/master/data/test2.zip"
-    urldownload(url, parser = identity)
+    @test_logs (:warn, "More than one file in zip archive, returning first.") urldownload(url, parser = identity)
 
     url = "https://raw.githubusercontent.com/Arkoniak/UrlDownload.jl/master/data/test2.zip"
     urldownload(url, compress = :none, parser = identity)
 end
-
 
 end # module

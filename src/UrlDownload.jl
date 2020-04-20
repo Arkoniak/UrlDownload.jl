@@ -88,9 +88,6 @@ function datatype(url)
     for (k, v) in ext2sym
         occursin(k, ext) && return v
     end
-
-    # For now (later magic should be reintroduced)
-    error("$ext is unsupported.")
 end
 
 # this set of functions is needed for distinguish between raw data and zipstreams,
@@ -110,9 +107,9 @@ function wrapdata(url, data, format, parser, error_on_undetected_format = true; 
             return sym2func[dtype](buf; kw...)
         else
             if error_on_undetected_format
-                @error "Data format $dtype is not supported"
+                @error "Data format $dtype is not supported."
             else
-                @warn "Data format $dtype is not supported"
+                @warn "Data format $dtype is not supported."
                 return data
             end
         end
@@ -152,7 +149,7 @@ function checkformat(data, url)
 end
 
 """
-    urldownload(url, progress = false; parser = nothing, format = nothing, headers = HTTP.Header[], httpkw = Pair[], update_period = 1, kw...)
+    urldownload(url, progress = false; parser = nothing, format = nothing, compress = :auto, multifiles = false, headers = HTTP.Header[], httpkw = Pair[], update_period = 1, kw...)
 
 Download file from the corresponding url in memory and process it to the necessary data structure.
 
@@ -163,6 +160,12 @@ Download file from the corresponding url in memory and process it to the necessa
 keyword arguments and return necessary data structure. If parser is set than it overrides all other settings, such as `format`.
 If parser is not set, than internal parsers are used for data process.
 * `format`: one of the fixed formats (:CSV, :PIC, :FEATHER, :JSON), if set overrides autodetection mechanism.
+* `compress`: :auto by default, can be one of :none, :xz, :gzip, :bzip2, :lz4, :zstd, :zip. Determines whether file is compressed
+and compression type. Decompressed data is processed either by custom `parser` or by internal parser. By default
+for any compression type except of `:zip` internal parser is `CSV.File`, for `:zip` usual rules applies. If
+`compress` is `:none` than custom parser should decompress data on its own.
+* `multifiles`: `false` by default, for `:zip` compressed data defines, whether process only
+first file inside archive or return an array of decompressed and processed objects. 
 * `headers`: `HTTP.jl` arguments that set http header of the request.
 * `httpkw`: `HTTP.jl` additional keyword arguments that is passed to the `GET` function. Should be supplied as a vector of
 pairs.
@@ -198,7 +201,7 @@ function urldownload(url, progress = false;
         wrapdata(url, body, format, parser; kw...)
     elseif compress == :zip
         zlib = checked_import(:ZipFile)
-        zread = getfield(zlib, :Reader)(IOBuffer(body)).files
+        zread = Base.invokelatest(getfield(zlib, :Reader), IOBuffer(body)).files
         if multifiles
             return [wrapdata(z.name, z, format, parser, false; kw...) for z in zread]
         else
