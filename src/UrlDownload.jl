@@ -178,25 +178,22 @@ function urldownload(url, progress = false;
         compress = :auto, multifiles = false,
         headers = HTTP.Header[],
         update_period = 1, httpkw = Pair[], kw...)
-    body = UInt8[]
+
+    local body
     HTTP.open("GET", url, headers; httpkw...) do stream
         resp = startread(stream)
-        if (resp.status >= 300) & (resp.status < 400)
-            # redirects, do nothing
-        elseif !((resp.status >= 200) & (resp.status < 300))
-            throw(ErrorException("HTTP error:\n$resp"))
-        else
-            eof(stream) && return
-            total_bytes = Int(floor(parse(Float64, HTTP.header(resp, "Content-Length", "NaN"))))
-            if progress
-                p = Progress(total_bytes, update_period)
-            end
+        eof(stream) && return # nothing to process yet
 
-            while !eof(stream)
-                append!(body, readavailable(stream))
-                if progress
-                    update!(p, length(body))
-                end
+        body = UInt8[]
+        total_bytes = Int(floor(parse(Float64, HTTP.header(resp, "Content-Length", "NaN"))))
+        if progress
+            p = Progress(total_bytes, update_period)
+        end
+
+        while !eof(stream)
+            append!(body, readavailable(stream))
+            if progress
+                update!(p, length(body))
             end
         end
     end
