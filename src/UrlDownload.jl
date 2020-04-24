@@ -99,7 +99,7 @@ _getdata(buf::IOBuffer) = buf.data
 _getdata(buf) = buf
 
 function wrapdata(url, data, format, parser, error_on_undetected_format = true; kw...)
-    if isnothing(parser)
+    if parser === nothing
         buf = createbuffer(data)
         dtype = format == nothing ? datatype(url) : format
 
@@ -224,7 +224,7 @@ function urldownload(url, progress = false;
     elseif compress in keys(Compressor)
         # it's one of the TranscodingStreams.jl streams, not much to do here,
         # defaults to CSV/custom parser
-        if isnothing(parser)
+        if parser === nothing
             lib = checked_import(Compressor[compress].lib)
             stream = getfield(lib, Compressor[compress].stream)
             csvlib = checked_import(:CSV)
