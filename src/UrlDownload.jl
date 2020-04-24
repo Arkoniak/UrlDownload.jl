@@ -138,10 +138,11 @@ function checkformat(data, url)
         return :lz4
     end
 
-    # it's too ambigous to detect zip with magic bytes
-    _, ext = splitext(url)
-    if (ext == ".zip") | (ext == ".z")
-        return :zip
+    # there is a possibility of false positive, but
+    # better to be sorry
+    if occursin(".zip", url) &
+        ((magic[1:4] == b"\x50\x4b\x03\x04") | (magic[1:4] == b"\x50\x4b\x05\x06") | (magic[1:4] == b"\x50\x4b\x07\x08"))
+            return :zip
     end
 
     # we are giving up
@@ -165,7 +166,7 @@ and compression type. Decompressed data is processed either by custom `parser` o
 for any compression type except of `:zip` internal parser is `CSV.File`, for `:zip` usual rules applies. If
 `compress` is `:none` than custom parser should decompress data on its own.
 * `multifiles`: `false` by default, for `:zip` compressed data defines, whether process only
-first file inside archive or return an array of decompressed and processed objects. 
+first file inside archive or return an array of decompressed and processed objects.
 * `headers`: `HTTP.jl` arguments that set http header of the request.
 * `httpkw`: `HTTP.jl` additional keyword arguments that is passed to the `GET` function. Should be supplied as a vector of
 pairs.
@@ -180,16 +181,22 @@ function urldownload(url, progress = false;
     body = UInt8[]
     HTTP.open("GET", url, headers; httpkw...) do stream
         resp = startread(stream)
-        eof(stream) && return
-        total_bytes = Int(floor(parse(Float64, HTTP.header(resp, "Content-Length", "NaN"))))
-        if progress
-            p = Progress(total_bytes, update_period)
-        end
-
-        while !eof(stream)
-            append!(body, readavailable(stream))
+        if (resp.status >= 300) & (resp.status < 400)
+            # redirects, do nothing
+        elseif !((resp.status >= 200) & (resp.status < 300))
+            throw(ErrorException("HTTP error:\n$resp"))
+        else
+            eof(stream) && return
+            total_bytes = Int(floor(parse(Float64, HTTP.header(resp, "Content-Length", "NaN"))))
             if progress
-                update!(p, length(body))
+                p = Progress(total_bytes, update_period)
+            end
+
+            while !eof(stream)
+                append!(body, readavailable(stream))
+                if progress
+                    update!(p, length(body))
+                end
             end
         end
     end
