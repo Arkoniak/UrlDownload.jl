@@ -101,11 +101,12 @@ _getdata(buf) = buf
 function wrapdata(url, data, format, parser, error_on_undetected_format = true; kw...)
     if parser === nothing
         buf = createbuffer(data)
-        dtype = format == nothing ? datatype(url) : format
+        dtype = format === nothing ? datatype(url) : format
 
         if dtype in keys(sym2func)
             return sym2func[dtype](buf; kw...)
         else
+            dtype = dtype === nothing ? :unknown : dtype
             if error_on_undetected_format
                 @error "Data format $dtype is not supported."
             else
