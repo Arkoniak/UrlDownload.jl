@@ -32,7 +32,7 @@ end
     @test_logs (:warn, "More than one file in zip archive, returning first.") urldownload(url)
 
     url = "https://raw.githubusercontent.com/Arkoniak/UrlDownload.jl/master/data/test2.zip"
-    @test_logs (:warn, "Data format nothing is not supported.") urldownload(url, multifiles = true)
+    @test_logs (:warn, "Data format unknown is not supported.") urldownload(url, multifiles = true)
 end
 
 @testset "compress overrides" begin
