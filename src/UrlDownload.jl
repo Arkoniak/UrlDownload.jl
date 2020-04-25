@@ -99,13 +99,14 @@ _getdata(buf::IOBuffer) = buf.data
 _getdata(buf) = buf
 
 function wrapdata(url, data, format, parser, error_on_undetected_format = true; kw...)
-    if isnothing(parser)
+    if parser === nothing
         buf = createbuffer(data)
-        dtype = format == nothing ? datatype(url) : format
+        dtype = format === nothing ? datatype(url) : format
 
         if dtype in keys(sym2func)
             return sym2func[dtype](buf; kw...)
         else
+            dtype = dtype === nothing ? :unknown : dtype
             if error_on_undetected_format
                 @error "Data format $dtype is not supported."
             else
@@ -138,10 +139,11 @@ function checkformat(data, url)
         return :lz4
     end
 
-    # it's too ambigous to detect zip with magic bytes
-    _, ext = splitext(url)
-    if (ext == ".zip") | (ext == ".z")
-        return :zip
+    # there is a possibility of false positive, but
+    # better to be sorry
+    if occursin(".zip", url) &
+        ((magic[1:4] == b"\x50\x4b\x03\x04") | (magic[1:4] == b"\x50\x4b\x05\x06") | (magic[1:4] == b"\x50\x4b\x07\x08"))
+            return :zip
     end
 
     # we are giving up
@@ -165,7 +167,7 @@ and compression type. Decompressed data is processed either by custom `parser` o
 for any compression type except of `:zip` internal parser is `CSV.File`, for `:zip` usual rules applies. If
 `compress` is `:none` than custom parser should decompress data on its own.
 * `multifiles`: `false` by default, for `:zip` compressed data defines, whether process only
-first file inside archive or return an array of decompressed and processed objects. 
+first file inside archive or return an array of decompressed and processed objects.
 * `headers`: `HTTP.jl` arguments that set http header of the request.
 * `httpkw`: `HTTP.jl` additional keyword arguments that is passed to the `GET` function. Should be supplied as a vector of
 pairs.
@@ -177,10 +179,13 @@ function urldownload(url, progress = false;
         compress = :auto, multifiles = false,
         headers = HTTP.Header[],
         update_period = 1, httpkw = Pair[], kw...)
-    body = UInt8[]
+
+    local body
     HTTP.open("GET", url, headers; httpkw...) do stream
         resp = startread(stream)
-        eof(stream) && return
+        eof(stream) && return # nothing to process yet
+
+        body = UInt8[]
         total_bytes = Int(floor(parse(Float64, HTTP.header(resp, "Content-Length", "NaN"))))
         if progress
             p = Progress(total_bytes, update_period)
@@ -217,7 +222,7 @@ function urldownload(url, progress = false;
     elseif compress in keys(Compressor)
         # it's one of the TranscodingStreams.jl streams, not much to do here,
         # defaults to CSV/custom parser
-        if isnothing(parser)
+        if parser === nothing
             lib = checked_import(Compressor[compress].lib)
             stream = getfield(lib, Compressor[compress].stream)
             csvlib = checked_import(:CSV)
