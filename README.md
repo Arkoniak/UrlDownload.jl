@@ -30,6 +30,8 @@ or switch to `Pkg` mode with `]` and issue
 pkg> add UrlDownload
 ```
 
+Note: this package uses many different packages for data processing, which should be installed separately. SO, if you receive message like `ERROR: ArgumentError: Package CSV not found in current path`, install `CSV.jl` manually and error will go away. No additional work is needed, since `UrlDownload.jl` import necessary packages on it's own.
+
 # Basic usage
 
 ## Download CSV files
