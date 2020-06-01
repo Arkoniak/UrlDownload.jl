@@ -26,11 +26,11 @@ const sym2func = Dict(
 )
 
 const Compressor = Dict(
-    :gzip => (lib = :CodecZlib, stream = :GzipDecompressorStream),
-    :zstd => (lib = :CodecZstd, stream = :ZstdDecompressorStream),
-    :xz => (lib = :CodecXz, stream = :XzDecompressorStream),
-    :lz4 => (lib = :CodecLz4, stream = :LZ4FrameDecompressorStream),
-    :bzip2 => (lib = :CodecBzip2, stream = :Bzip2DecompressorStream)
+    :gzip => (lib = :CodecZlib, stream = :GzipDecompressorStream, transcode = :GzipDecompressor),
+    :zstd => (lib = :CodecZstd, stream = :ZstdDecompressorStream, transcode = :ZstdDecompressor),
+    :xz => (lib = :CodecXz, stream = :XzDecompressorStream, transcode = :XzDecompressor),
+    :lz4 => (lib = :CodecLz4, stream = :LZ4FrameDecompressorStream, transcode = :LZ4FrameDecompressor),
+    :bzip2 => (lib = :CodecBzip2, stream = :Bzip2DecompressorStream, transcode = :Bzip2Decompressor)
 )
 
 function load_feather(buf; kw...)
@@ -186,8 +186,9 @@ function urldownload(url, progress = false;
         eof(stream) && return # nothing to process yet
 
         body = UInt8[]
-        total_bytes = Int(floor(parse(Float64, HTTP.header(resp, "Content-Length", "NaN"))))
         if progress
+            total_bytes = floor(parse(Float64, HTTP.header(resp, "Content-Length", "NaN")))
+            total_bytes = isnan(total_bytes) ? typemax(Int) : Int(total_bytes)
             p = Progress(total_bytes, update_period)
         end
 
@@ -229,7 +230,10 @@ function urldownload(url, progress = false;
             csvlibfile = getfield(csvlib, :File)
             return Base.invokelatest(csvlibfile, Base.invokelatest(stream, IOBuffer(body)); kw...)
         else
-            return parser(body; kw...)
+            lib = checked_import(Compressor[compress].lib)
+            transcoder = getfield(lib, Compressor[compress].transcode)
+            data = Base.invokelatest(transcode, transcoder, body)
+            return parser(data; kw...)
         end
     else
         error("Unknown compress format: $compress")
