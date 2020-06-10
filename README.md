@@ -22,7 +22,7 @@ or switch to `Pkg` mode with `]` and issue
 pkg> add UrlDownload
 ```
 
-Note: this package uses many different packages for data processing, which should be installed separately. SO, if you receive message like `ERROR: ArgumentError: Package CSV not found in current path`, install `CSV.jl` manually and error will go away. No additional work is needed, since `UrlDownload.jl` import necessary packages on it's own.
+Note: this package uses many different packages for data processing, which should be installed separately. So, if you receive message like `ERROR: ArgumentError: Package CSV not found in current path`, install [CSV.jl](https://github.com/JuliaData/CSV.jl) manually and error will go away. No additional work is needed, since `UrlDownload.jl` import necessary packages on it's own.
 
 # Usage
 
