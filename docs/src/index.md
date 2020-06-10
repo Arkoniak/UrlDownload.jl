@@ -1,8 +1,5 @@
 # UrlDownload.jl
 
-```@index
-```
-
 [UrlDownload.jl](https://github.com/Arkoniak/UrlDownload.jl) is a small package aimed to simplify process of data downloading and postprocessing, without intermediate files storing. Additionally `UrlDownload.jl` provides progress bar for big files with long download time.
 
 Currently these types of data are supported
@@ -249,6 +246,8 @@ df = urldownload(url, format = :CSV) |> DataFrame
 # │ 1   │ 1     │ 2     │
 # │ 2   │ 3     │ 4     │
 ```
+
+# Functions
 
 ```@autodocs
 Modules = [UrlDownload]
