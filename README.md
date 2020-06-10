@@ -6,7 +6,7 @@
 
 This is small package aimed to simplify process of data downloading and postprocessing, without intermediate files storing. Additionally `UrlDownload.jl` provides progress bar for big files with long download time.
 
-UrlDownload.jl has integrated support for the processing of various data formats, such as CSV, JSON, various image formats. Everything that is not supported by default, can be easily extended with custom parsers. Also, package automatically decompress and process various compressed data with the help of `TranscodingStreams.jl`(https://github.com/JuliaIO/TranscodingStreams.jl). And it can process files located on `http` resources and local.
+UrlDownload.jl has integrated support for the processing of various data formats, such as CSV, JSON, various image formats. Everything that is not supported by default, can be easily extended with custom parsers. Also, package automatically decompress and process various compressed data with the help of [TranscodingStreams.jl](https://github.com/JuliaIO/TranscodingStreams.jl). And it can process files located on `http` resources and local.
 
 # Installation
 
