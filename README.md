@@ -5,7 +5,7 @@
 [![Build Status](https://travis-ci.com/Arkoniak/UrlDownload.jl.svg?branch=master)](https://travis-ci.com/Arkoniak/UrlDownload.jl)
 [![Codecov](https://codecov.io/gh/Arkoniak/UrlDownload.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/Arkoniak/UrlDownload.jl)
 
-This is small package aimed to simplify process of data downloading, without intermediate files storing. Additionally `UrlDownload.jl` provides progress bar for big files with long download time.
+This is small package aimed to simplify process of data downloading and postprocessing, without intermediate files storing. Additionally `UrlDownload.jl` provides progress bar for big files with long download time.
 
 Currently these types of data are supported
 
