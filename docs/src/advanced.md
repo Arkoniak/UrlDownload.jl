@@ -1,3 +1,7 @@
+```@meta
+Module = UrlDownload
+```
+
 # Additional functionality
 
 ## Progress Meter
@@ -164,9 +168,49 @@ x,y
 3,4
 ```
 
-You can process downloaded file with `urldownload` in the following way
+Since [`urldownload`](@ref) supports local files download, you can read data in the following way
 ```julia
-io = open("/tmp/data.csv", "r")
-res = urldownload(io) |> DataFrame
-close(io)
+res = urldownload("/tmp/data.csv") |> DataFrame
+```
+
+## Resource type autodetection
+
+As it was said in previous section, [`urldownload`](@ref) can autodetect resource type and download and process data accordingly. In case autodetection fails, you can always fallback to manual resource definition with the help of `File` and `URL` structs or `@f_str` and `@u_str` macros
+```julia
+using DataFrames
+using UrlDownload
+using UrlDownload: File, URL, @f_str, @u_str
+
+# All of these are equivalent
+url = "https://raw.githubusercontent.com/Arkoniak/UrlDownload.jl/master/data/ext.csv"
+res = urldownload(url) |> DataFrame
+
+url = u"https://raw.githubusercontent.com/Arkoniak/UrlDownload.jl/master/data/ext.csv"
+res = urldownload(url) |> DataFrame
+
+url = @u_str "https://raw.githubusercontent.com/Arkoniak/UrlDownload.jl/master/data/ext.csv"
+res = urldownload(url) |> DataFrame
+
+url = URL("https://raw.githubusercontent.com/Arkoniak/UrlDownload.jl/master/data/ext.csv")
+res = urldownload(url) |> DataFrame
+```
+
+and for the files
+```julia
+using DataFrames
+using UrlDownload
+using UrlDownload: File, URL, @f_str, @u_str
+
+# All of these are equivalent
+url = "/tmp/data.csv"
+res = urldownload(url) |> DataFrame
+
+url = f"/tmp/data.csv"
+res = urldownload(url) |> DataFrame
+
+url = @f_str "/tmp/data.csv"
+res = urldownload(url) |> DataFrame
+
+url = File("/tmp/data.csv")
+res = urldownload(url) |> DataFrame
 ```

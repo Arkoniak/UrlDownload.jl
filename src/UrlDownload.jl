@@ -44,7 +44,7 @@ struct URL <: Resource
 end
 
 """
-    macro f_str(name)
+    f_str(name)
 
 Use this macro to explicitly show that downloaded url is actually local file resource. It is useful if resource type autodetection fails.
 
@@ -67,7 +67,7 @@ macro f_str(p)
 end
 
 """
-    macro u_str(name)
+    u_str(name)
 
 Use this macro to explicitly show that downloaded url is remote http resource. It is useful if resource type autodetection fails.
 
@@ -255,10 +255,11 @@ end
 
 autodetect_uri_type(url) = url
 function autodetect_uri_type(url::AbstractString)
-    if startswith(url, r"https?://")
-        return URL(url)
-    else
+    m = match(r"^https?://.*", url)
+    if m === nothing
         return File(url)
+    else
+        return URL(url)
     end
 end
 
