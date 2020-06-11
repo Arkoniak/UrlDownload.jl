@@ -33,6 +33,62 @@ const Compressor = Dict(
     :bzip2 => (lib = :CodecBzip2, stream = :Bzip2DecompressorStream, transcode = :Bzip2Decompressor)
 )
 
+abstract type Resource end
+
+struct File <: Resource
+    name::String
+end
+
+struct URL <: Resource
+    name::String
+end
+
+"""
+    macro f_str(name)
+
+Use this macro to explicitly show that downloaded url is actually local file resource. It is useful if resource type autodetection fails.
+
+# Example
+```
+using UrlDownload: @f_str
+url = f"/tmp/data"
+res = urldownload(url)
+
+# Alternatively
+using UrlDownload: File
+url = File("/tmp/data")
+res = urldownload(url)
+```
+"""
+macro f_str(p)
+    return quote
+        File($(esc(p)))
+    end
+end
+
+"""
+    macro u_str(name)
+
+Use this macro to explicitly show that downloaded url is remote http resource. It is useful if resource type autodetection fails.
+
+# Example
+```
+using UrlDownload: @u_str
+url = u"https://example.com/data.csv"
+res = urldownload(url)
+
+# Alternatively
+using UrlDownload: URL
+url = URL("https://example.com/data.csv")
+res = urldownload(url)
+```
+"""
+macro u_str(p)
+    return quote
+        URL($(esc(p)))
+    end
+end
+
 function load_feather(buf; kw...)
     lib = checked_import(:Feather)
     return Base.invokelatest(lib.read, buf)
@@ -57,7 +113,6 @@ end
 
 # This one is outdated.
 # is_installed(pkg::Symbol) = get(Pkg.installed(), string(pkg), nothing) != nothing
-
 
 function _findmod(f::Symbol)
     for (u,v) in Base.loaded_modules
@@ -85,6 +140,7 @@ end
 
 getext(url) = splitext(url)
 getext(url::IO) = splitext(url.name[2:end-1])
+getext(url::Resource) = getext(url.name)
     
 function datatype(url)
     _, ext = getext(url)
@@ -124,6 +180,7 @@ function wrapdata(url, data, format, parser, error_on_undetected_format = true; 
 end
 
 maybezip(url) = occursin(".zip", url)
+maybezip(url::Resource) = occursin(".zip", url.name)
 maybezip(url::IO) = occursin(".zip", url.name)
 
 # Check the file format of a stream.
@@ -169,9 +226,12 @@ function saveraw(io::AbstractString, data)
 end
 
 get_data(url::IO, headers, httpkw, progress, update_period) = read(url)
-function get_data(url, headers, httpkw, progress, update_period)
+get_data(url::AbstractString, headers, httpkw, progress, update_period) =
+    get_data(autodetect_uri_type(url), headers, httpkw, progress, update_period)
+get_data(url::File, headers, httpkw, progress, update_period) = read(url.name)
+function get_data(url::URL, headers, httpkw, progress, update_period)
     local body
-    HTTP.open("GET", url, headers; httpkw...) do stream
+    HTTP.open("GET", url.name, headers; httpkw...) do stream
         resp = startread(stream)
         eof(stream) && return # nothing to process yet
 
@@ -193,6 +253,14 @@ function get_data(url, headers, httpkw, progress, update_period)
     return body
 end
 
+autodetect_uri_type(url) = url
+function autodetect_uri_type(url::AbstractString)
+    if startswith(url, r"https?://")
+        return URL(url)
+    else
+        return File(url)
+    end
+end
 
 """
     urldownload(url, progress = false;

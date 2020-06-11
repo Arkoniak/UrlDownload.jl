@@ -1,32 +1,46 @@
 module TestCompress
 using Test
 using UrlDownload
+using DataFrames
 
 @testset "compress" begin
+    df = DataFrame(x = [1, 3], y = [2, 4])
     url = "https://raw.githubusercontent.com/Arkoniak/UrlDownload.jl/master/data/test.xz"
-    urldownload(url)
-    urldownload(url, compress = :xz)
+    res = urldownload(url) |> DataFrame
+    @test res == df
+    res = urldownload(url, compress = :xz) |> DataFrame
+    @test res == df
 
     url = "https://raw.githubusercontent.com/Arkoniak/UrlDownload.jl/master/data/test.gz"
-    urldownload(url)
-    urldownload(url, compress = :gzip)
+    res = urldownload(url) |> DataFrame
+    @test res == df
+    res = urldownload(url, compress = :gzip) |> DataFrame
+    @test res == df
 
     url = "https://raw.githubusercontent.com/Arkoniak/UrlDownload.jl/master/data/test.bz2"
-    urldownload(url)
-    urldownload(url, compress = :bzip2)
+    res = urldownload(url) |> DataFrame
+    @test res == df
+    res = urldownload(url, compress = :bzip2) |> DataFrame
+    @test res == df
 
     url = "https://raw.githubusercontent.com/Arkoniak/UrlDownload.jl/master/data/test.lz4"
-    urldownload(url)
-    urldownload(url, compress = :lz4)
+    res = urldownload(url) |> DataFrame
+    @test res == df
+    res = urldownload(url, compress = :lz4) |> DataFrame
+    @test res == df
 
     url = "https://raw.githubusercontent.com/Arkoniak/UrlDownload.jl/master/data/test.zst"
-    urldownload(url)
-    urldownload(url, compress = :zstd)
+    res = urldownload(url) |> DataFrame
+    @test res == df
+    res = urldownload(url, compress = :zstd) |> DataFrame
+    @test res == df
 end
 
 @testset "zip compress" begin
+    df = DataFrame(x = [1, 3], y = [2, 4])
     url = "https://raw.githubusercontent.com/Arkoniak/UrlDownload.jl/master/data/ext.csv.zip"
-    urldownload(url)
+    res = urldownload(url) |> DataFrame
+    @test res == df
 
     url = "https://raw.githubusercontent.com/Arkoniak/UrlDownload.jl/master/data/test2.zip"
     @test_logs (:warn, "More than one file in zip archive, returning first.") urldownload(url)
